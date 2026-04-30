@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transformers Demystified — A Visual Deep Dive</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pp-deep: #002991;
+    --pp-venmo: #008CFF;
+    --pp-bright: #60CDFF;
+    --pp-black: #000000;
+    --pp-white: #FFFFFF;
+    --pp-gray: #F7F7F5;
+    --pp-border: #E8E8E4;
+    --pp-muted: #6B6B68;
+    --pp-text: #1A1A18;
+    --article-w: 740px;
+    --wide-w: 960px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 19px;
+    line-height: 1.75;
+    color: var(--pp-text);
+    background: var(--pp-white);
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: var(--pp-venmo);
+    z-index: 1000;
+    transition: width .1s linear;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 900;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--pp-border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
+    color: var(--pp-deep);
+    text-decoration: none;
+  }
+  .nav-meta {
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px; color: var(--pp-muted);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--pp-black);
+    padding: 80px 2rem 72px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent 0px, transparent 28px,
+      rgba(0,41,145,0.08) 28px, rgba(0,41,145,0.08) 29px
+    );
+  }
+  .hero-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 500; letter-spacing: .12em;
+    color: var(--pp-bright);
+    text-transform: uppercase;
+    border: 1px solid rgba(96,205,255,.35);
+    padding: 5px 14px; border-radius: 3px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(38px, 6vw, 68px);
+    font-weight: 900; line-height: 1.06;
+    letter-spacing: -0.03em;
+    color: var(--pp-white);
+    max-width: 820px; margin: 0 auto 20px;
+    position: relative;
+  }
+  .hero h1 em {
+    font-style: italic; color: var(--pp-bright);
+  }
+  .hero-sub {
+    font-family: 'Source Serif 4', serif;
+    font-size: 19px; font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    max-width: 560px; margin: 0 auto 36px;
+    position: relative;
+  }
+  .hero-byline {
+    font-family: 'Source Serif 4', serif;
+    font-size: 14px; color: rgba(255,255,255,0.4);
+    position: relative;
+  }
+  .hero-byline span { color: rgba(255,255,255,0.7); }
+
+  /* ── ARTICLE BODY ── */
+  .article-body {
+    max-width: var(--article-w);
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ── SECTIONS ── */
+  section { padding: 56px 0 0; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 500; letter-spacing: .14em;
+    color: var(--pp-venmo);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(26px, 4vw, 36px);
+    font-weight: 700; line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--pp-black);
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--pp-black);
+    margin: 36px 0 12px;
+  }
+
+  p { margin-bottom: 22px; color: var(--pp-text); }
+
+  strong { font-weight: 600; color: var(--pp-black); }
+
+  /* ── PULL QUOTE ── */
+  .pull-quote {
+    border-left: 4px solid var(--pp-deep);
+    margin: 36px 0;
+    padding: 4px 0 4px 28px;
+  }
+  .pull-quote p {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-style: italic;
+    line-height: 1.5; color: var(--pp-black);
+    margin-bottom: 8px;
+  }
+  .pull-quote cite {
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px; color: var(--pp-muted);
+    font-style: normal; letter-spacing: .04em;
+  }
+
+  /* ── CODE INLINE ── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    background: #F0F4FF;
+    color: var(--pp-deep);
+    padding: 2px 7px; border-radius: 3px;
+    border: 1px solid rgba(0,41,145,.12);
+  }
+
+  /* ── FORMULA BOX ── */
+  .formula-box {
+    background: var(--pp-black);
+    color: var(--pp-bright);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    padding: 20px 28px;
+    border-radius: 6px;
+    margin: 28px 0;
+    text-align: center;
+    letter-spacing: .04em;
+  }
+
+  /* ── KEY POINTS ── */
+  .key-points {
+    background: #F0F4FF;
+    border: 1px solid rgba(0,41,145,.15);
+    border-left: 4px solid var(--pp-deep);
+    padding: 20px 24px;
+    border-radius: 0 6px 6px 0;
+    margin: 28px 0;
+  }
+  .key-points ul { list-style: none; padding: 0; }
+  .key-points li {
+    font-size: 16px; line-height: 1.6;
+    padding: 5px 0 5px 22px;
+    position: relative; color: var(--pp-text);
+    font-family: 'Source Serif 4', serif;
+  }
+  .key-points li::before {
+    content: '→';
+    position: absolute; left: 0;
+    color: var(--pp-venmo); font-weight: 600;
+  }
+
+  /* ── INTERACTIVE WIDGET WRAPPER ── */
+  .widget-wrap {
+    margin: 36px -2rem;
+    background: var(--pp-gray);
+    border-top: 1px solid var(--pp-border);
+    border-bottom: 1px solid var(--pp-border);
+    padding: 28px 2rem 24px;
+  }
+  .widget-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 500; letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--pp-muted);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .widget-label::before {
+    content: '';
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--pp-venmo);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex; align-items: center; gap: 16px;
+    margin: 52px 0 0;
+    color: var(--pp-border);
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--pp-border);
+  }
+  .divider span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px; color: var(--pp-border);
+    letter-spacing: .2em;
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .variants-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    margin: 28px 0;
+  }
+  .variant-card {
+    border: 1px solid var(--pp-border);
+    border-radius: 8px; padding: 18px 16px;
+    background: var(--pp-white);
+  }
+  .variant-card h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; font-weight: 700; margin-bottom: 8px;
+    color: var(--pp-deep);
+  }
+  .variant-card p {
+    font-size: 13px; line-height: 1.55; color: var(--pp-muted);
+    margin-bottom: 10px;
+  }
+  .variant-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--pp-venmo);
+    background: #F0F4FF;
+    padding: 2px 8px; border-radius: 3px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--pp-black); color: rgba(255,255,255,0.5);
+    padding: 48px 2rem;
+    text-align: center; margin-top: 80px;
+    font-family: 'Source Serif 4', serif;
+    font-size: 14px; line-height: 1.7;
+  }
+  footer a { color: var(--pp-bright); text-decoration: none; }
+  footer strong { color: rgba(255,255,255,.8); }
+
+  /* ── TOC ── */
+  .toc {
+    background: var(--pp-gray);
+    border: 1px solid var(--pp-border);
+    border-radius: 8px;
+    padding: 24px 28px; margin: 40px 0;
+  }
+  .toc-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 500; letter-spacing:.14em;
+    color: var(--pp-muted); text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .toc ol { padding-left: 20px; }
+  .toc li {
+    font-family: 'Source Serif 4', serif;
+    font-size: 15px; line-height: 1.7;
+    color: var(--pp-text);
+  }
+  .toc a { color: var(--pp-deep); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* ── INTERACTIVE STYLES ── */
+  .tok-btn { cursor:pointer; transition: opacity .15s; }
+  .tok-btn:hover { opacity:.8; }
+  .head-btn {
+    padding:7px 14px; border-radius:5px;
+    border:1.5px solid #DDD; background:#fff;
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:500;
+    cursor:pointer; transition:all .15s; color:#000;
+  }
+  .head-btn.active { background:#002991; border-color:#002991; color:#fff; }
+  .head-btn:hover:not(.active) { border-color:#008CFF; color:#008CFF; }
+  .nav-step {
+    padding:8px 20px; border-radius:6px;
+    border:1.5px solid #002991; background:#fff; color:#002991;
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:500;
+    cursor:pointer; transition:all .15s;
+  }
+  .nav-step:hover { background:#002991; color:#fff; }
+  .nav-step:disabled { opacity:.3; cursor:default; }
+
+  @media (max-width: 640px) {
+    .variants-grid { grid-template-columns: 1fr; }
+    .widget-wrap { margin: 28px -1rem; padding: 20px 1rem; }
+    h2 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">Transformers Demystified</a>
+  <span class="nav-meta">Visual Deep Dive · 12 min read</span>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-tag">Machine Learning · Deep Dive</div>
+  <h1>Transformers <em>Demystified</em><br>A Visual Deep Dive</h1>
+  <p class="hero-sub">Self-attention, multi-head attention, encoders, decoders — explained with interactive visuals you can actually play with.</p>
+  <p class="hero-byline">April 2025 · <span>12 min read</span> · <span>4 interactive widgets</span></p>
+</header>
+
+<!-- BODY -->
+<div class="article-body">
+
+  <!-- TOC -->
+  <div class="toc" style="margin-top:48px;">
+    <div class="toc-title">In this article</div>
+    <ol>
+      <li><a href="#s1">The big picture — what is a Transformer?</a></li>
+      <li><a href="#s2">Self-attention — the core mechanism</a></li>
+      <li><a href="#s3">Multi-head attention — multiple lenses</a></li>
+      <li><a href="#s4">The encoder — reading with context</a></li>
+      <li><a href="#s5">The decoder — generating step by step</a></li>
+      <li><a href="#s6">Layer by layer — following a token</a></li>
+      <li><a href="#s7">The three modern variants</a></li>
+    </ol>
+  </div>
+
+  <!-- S1 -->
+  <section id="s1">
+    <div class="section-label">01 — Overview</div>
+    <h2>What is a Transformer, really?</h2>
+    <p>In 2017, a team at Google published a paper with a provocative title: <strong>"Attention Is All You Need."</strong> The architecture they described — the Transformer — went on to power GPT, BERT, T5, Claude, Gemini, and virtually every frontier AI system you interact with today.</p>
+    <p>Before Transformers, sequence models were sequential. RNNs and LSTMs processed tokens one at a time, left to right, carrying a hidden state forward like a rolling memory. This meant long-range dependencies were hard to learn, training was slow, and parallelisation was nearly impossible.</p>
+
+    <div class="pull-quote">
+      <p>"What if we just let every word attend directly to every other word — all at once?"</p>
+      <cite>— The insight behind self-attention</cite>
+    </div>
+
+    <p>The Transformer's answer was radical: <strong>process all tokens in parallel</strong>, and use attention to let each token decide which other tokens are relevant. No recurrence. No convolution. Just attention.</p>
+
+    <div class="key-points">
+      <ul>
+        <li>All tokens processed simultaneously — no sequential bottleneck</li>
+        <li>Attention replaces recurrence for capturing dependencies</li>
+        <li>Residual connections + LayerNorm enable very deep stacking</li>
+        <li>Positional encoding preserves word-order information</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="divider"><span>· · ·</span></div>
+
+  <!-- S2 -->
+  <section id="s2">
+    <div class="section-label">02 — Core Mechanism</div>
+    <h2>Self-attention: every word talks to every other word</h2>
+    <p>Self-attention is the engine of the Transformer. For each token, it asks: <em>"Which other tokens in this sequence are relevant to understanding me?"</em></p>
+    <p>Every token generates three vectors by multiplying its embedding against three learned weight matrices:</p>
+
+    <div class="key-points">
+      <ul>
+        <li><strong>Query (Q)</strong> — "What am I looking for?"</li>
+        <li><strong>Key (K)</strong> — "What do I offer to others?"</li>
+        <li><strong>Value (V)</strong> — "What information do I actually carry?"</li>
+      </ul>
+    </div>
+
+    <p>The attention score between two tokens is computed by taking the dot product of one token's Query with another token's Key. A high dot product means "these two are relevant to each other." Scores are then scaled by <code>√d_k</code> to prevent them from getting too large, passed through a softmax (so they sum to 1), and used as weights to combine all the Values.</p>
+
+    <div class="formula-box">
+      Attention(Q, K, V) = softmax( Q·Kᵀ / √d_k ) · V
+    </div>
+
+    <p>The result is a new vector for each token — one that now contains a <strong>weighted blend of context from the entire sequence</strong>. The word "bank" after reading "river" will look very different from "bank" after reading "loan." That context-sensitivity is entirely captured by attention.</p>
+
+    <p><strong>Try it below.</strong> Click any token to see which other tokens it attends to. Line thickness and bar height represent attention weight.</p>
+  </section>
+
+  <!-- WIDGET 1 -->
+  <div class="widget-wrap">
+    <div class="widget-label">Interactive — click any token</div>
+
+    <div style="font-size:13px; color:#666; margin-bottom:10px; font-family:'Source Serif 4',serif;">
+      Sentence: "The cat sat on the mat"
+    </div>
+
+    <svg id="attn-svg" width="100%" viewBox="0 0 680 300" style="display:block;">
+      <defs>
+        <marker id="ah1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#008CFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <g id="a-tokens"></g>
+      <g id="a-lines"></g>
+      <g id="a-scores" transform="translate(0,196)"></g>
+    </svg>
+    <div id="a-info" style="font-size:12px; color:#666; font-family:'JetBrains Mono',monospace; min-height:18px; margin-top:6px;"></div>
+  </div>
+
+  <p>Notice that "the" at position 5 attends strongly back to "the" at position 1 — the model is learning coreference. "Sat" attends to "cat" because a verb naturally looks for its subject. These patterns emerge purely from training; they're never explicitly programmed.</p>
+
+  <div class="divider"><span>· · ·</span></div>
+
+  <!-- S3 -->
+  <section id="s3">
+    <div class="section-label">03 — Multi-Head Attention</div>
+    <h2>Multiple heads, multiple lenses on the same data</h2>
+    <p>Running attention once gives you one perspective. But language has multiple types of relationships happening simultaneously — a word can be syntactically linked to one word, semantically related to another, and co-referential with a third.</p>
+    <p>Multi-head attention runs <em>h</em> independent attention operations in parallel, each with its own learned weight matrices <code>Wᵢ_Q, Wᵢ_K, Wᵢ_V</code>. Each head projects the input into a lower-dimensional space (<code>d_model / h</code>) — so the total compute stays constant — but learns to capture different kinds of patterns.</p>
+    <p>All head outputs are concatenated and passed through a final linear projection <code>W_O</code> to produce the multi-head output.</p>
+
+    <div class="formula-box">
+      MultiHead(Q,K,V) = Concat(head₁, …, headₕ) · W_O
+    </div>
+
+    <p><strong>Explore the heatmap below.</strong> Each cell shows how strongly the row token (query) attends to the column token (key). Switch between heads to see how each one has specialised.</p>
+  </section>
+
+  <!-- WIDGET 2 -->
+  <div class="widget-wrap">
+    <div class="widget-label">Interactive — switch attention heads</div>
+    <div id="hd-btns" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;"></div>
+    <svg id="hd-svg" width="100%" viewBox="0 0 680 280" style="display:block; margin-bottom:8px;"></svg>
+    <div id="hd-desc" style="font-size:13px; color:#555; font-family:'Source Serif 4',serif; line-height:1.55; min-height:40px;"></div>
+  </div>
+
+  <p>The same sentence, four completely different "views." This is why multi-head attention is so powerful — the model learns to decompose the rich structure of language into orthogonal subspaces, then combines them all in the final projection.</p>
+
+  <div class="divider"><span>· · ·</span></div>
+
+  <!-- S4 -->
+  <section id="s4">
+    <div class="section-label">04 — The Encoder</div>
+    <h2>The encoder: building a rich representation of the input</h2>
+    <p>The encoder reads the entire input sequence and transforms it into a set of contextual representations — one vector per token, each aware of its full context. In the original paper, 6 identical encoder layers are stacked.</p>
+    <p>Each encoder layer has exactly two sub-layers:</p>
+
+    <h3>Sub-layer 1 — Multi-head self-attention</h3>
+    <p>Every token attends to every other token (bidirectional — no masking). After attention, the output is added back to the original input (<strong>residual connection</strong>) and then normalised (<strong>LayerNorm</strong>). This "Add & Norm" pattern is critical: the residual lets gradients flow cleanly through dozens of stacked layers without vanishing, while LayerNorm keeps activations well-scaled during training.</p>
+
+    <h3>Sub-layer 2 — Feed-forward network (FFN)</h3>
+    <p>Each token's vector passes independently through a two-layer MLP: <code>Linear → ReLU → Linear</code>. The hidden dimension is typically 4× the model dimension. This is where the model does "position-wise reasoning" — additional computation per token that goes beyond what attention can capture. Same weights are applied to every token position.</p>
+
+    <div class="key-points">
+      <ul>
+        <li>Attention sub-layer: tokens interact with each other</li>
+        <li>FFN sub-layer: each token processes independently</li>
+        <li>Add & Norm after every sub-layer — crucial for deep stacking</li>
+        <li>Positional encoding added at the very bottom before layer 1</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="divider"><span>· · ·</span></div>
+
+  <!-- S5 -->
+  <section id="s5">
+    <div class="section-label">05 — The Decoder</div>
+    <h2>The decoder: generating output one token at a time</h2>
+    <p>The decoder generates output autoregressively — one token per step, feeding each generated token back as input for the next. It has <strong>three sub-layers</strong> instead of two:</p>
+
+    <h3>Sub-layer 1 — Masked self-attention</h3>
+    <p>Same as encoder self-attention, but with a causal mask: each position can only attend to positions before it (including itself). This prevents the decoder from "cheating" by peeking at future tokens during training. At inference, there are no future tokens to peek at anyway.</p>
+
+    <h3>Sub-layer 2 — Cross-attention (encoder-decoder attention)</h3>
+    <p>This is the bridge between encoder and decoder. Queries come from the decoder's current state; Keys and Values come from the encoder's output. The decoder is essentially asking: <em>"Given what I've generated so far, which part of the input should I focus on right now?"</em></p>
+    <p>This is where translation and summarisation happen — the decoder learns to selectively pull information from the encoder at each step of generation.</p>
+
+    <h3>Sub-layer 3 — Feed-forward network</h3>
+    <p>Identical to the encoder FFN. Add & Norm after each sub-layer, same as before.</p>
+
+    <div class="pull-quote">
+      <p>"Cross-attention is where the two halves of the Transformer talk to each other. It's the moment of translation."</p>
+    </div>
+  </section>
+
+  <div class="divider"><span>· · ·</span></div>
+
+  <!-- S6 -->
+  <section id="s6">
+    <div class="section-label">06 — Step by Step</div>
+    <h2>Following a single token through all six stages</h2>
+    <p>Abstract concepts only click when you trace them concretely. Below, follow the token <strong>"cat"</strong> as it moves through one complete transformer encoder layer — from raw word to rich contextual representation.</p>
+    <p>Each stage transforms the vector in a distinct way. By the end, "cat" is no longer just a word — it's a precise description of <em>this particular cat</em> in <em>this particular sentence</em>.</p>
+  </section>
+
+  <!-- WIDGET 3 -->
+  <div class="widget-wrap">
+    <div class="widget-label">Interactive — step through each transformation</div>
+    <div id="sp-dots" style="display:flex; gap:8px; align-items:center; margin-bottom:16px;"></div>
+    <svg id="sp-svg" width="100%" viewBox="0 0 680 210" style="display:block;"></svg>
+    <div id="sp-title" style="font-size:16px; font-weight:600; color:#002991; margin:12px 0 5px; font-family:'Playfair Display',serif;"></div>
+    <div id="sp-body" style="font-size:13px; color:#555; font-family:'Source Serif 4',serif; line-height:1.6; min-height:60px; margin-bottom:14px;"></div>
+    <div style="display:flex; gap:10px; align-items:center; justify-content:space-between;">
+      <button class="nav-step" id="sp-prev" onclick="spMove(-1)">← Previous</button>
+      <span id="sp-count" style="font-size:12px; color:#aaa; font-family:'JetBrains Mono',monospace;"></span>
+      <button class="nav-step" id="sp-next" onclick="spMove(1)">Next →</button>
+    </div>
+  </div>
+
+  <div class="divider"><span>· · ·</span></div>
+
+  <!-- S7 -->
+  <section id="s7">
+    <div class="section-label">07 — Modern Variants</div>
+    <h2>Three families of Transformers in the wild</h2>
+    <p>The original paper used a full encoder-decoder architecture. But since 2017, the community has found that different tasks benefit from different parts of the architecture:</p>
+
+    <div class="variants-grid">
+      <div class="variant-card">
+        <h4>Encoder-only</h4>
+        <p>Full bidirectional attention. Every token sees every other token. Deep language understanding.</p>
+        <div><span class="variant-tag">BERT, RoBERTa</span></div>
+        <p style="margin-top:10px;">Best for: classification, NER, question answering, embeddings.</p>
+      </div>
+      <div class="variant-card" style="border-color:#002991; border-width:2px;">
+        <h4>Decoder-only</h4>
+        <p>Causal (left-to-right) attention only. Generates text autoregressively, token by token.</p>
+        <div><span class="variant-tag">GPT, Claude, Llama</span></div>
+        <p style="margin-top:10px;">Best for: text generation, chat, code completion, reasoning.</p>
+      </div>
+      <div class="variant-card">
+        <h4>Encoder-decoder</h4>
+        <p>Full encoder + cross-attending decoder. Maps input sequences to output sequences.</p>
+        <div><span class="variant-tag">T5, BART, original paper</span></div>
+        <p style="margin-top:10px;">Best for: translation, summarisation, structured generation.</p>
+      </div>
+    </div>
+
+    <p>The decoder-only architecture has dominated frontier AI since GPT-2. It's simpler, scales well, and — crucially — can be adapted to virtually any task through prompting, fine-tuning, or RLHF. Most models you interact with today (ChatGPT, Claude, Gemini) are decoder-only Transformers at heart.</p>
+
+    <h3>What comes next?</h3>
+    <p>The Transformer's one weakness is <strong>quadratic complexity</strong>: self-attention is O(n²·d) in sequence length. For long documents or high-resolution images, this becomes expensive. Research directions like Mamba (state-space models), linear attention, and FlashAttention are all attacking this bottleneck — but the core attention mechanism remains at the centre of nearly every approach.</p>
+
+    <div class="pull-quote">
+      <p>"Understanding Transformers deeply is no longer optional for anyone working in AI. It's the foundation everything else is built on."</p>
+    </div>
+  </section>
+
+  <div class="divider"><span>· · ·</span></div>
+
+  <section style="padding-bottom:60px;">
+    <div class="section-label">Further Reading</div>
+    <h2>Go deeper</h2>
+    <div class="key-points">
+      <ul>
+        <li>Vaswani et al. (2017) — <em>Attention Is All You Need</em> (the original paper)</li>
+        <li>Illustrated Transformer — Jay Alammar's classic walkthrough</li>
+        <li>Annotated Transformer — Harvard NLP, line-by-line code</li>
+        <li>Karpathy's nanoGPT — build a GPT from scratch in ~300 lines</li>
+      </ul>
+    </div>
+  </section>
+
+</div><!-- /article-body -->
+
+<footer>
+  <p style="margin-bottom:8px;"><strong>Transformers Demystified</strong> — A Visual Deep Dive</p>
+  <p>Built with PayPal brand colors · Interactive visuals powered by vanilla JS + SVG</p>
+  <p style="margin-top:12px; font-size:12px;">Based on Vaswani et al., "Attention Is All You Need," NeurIPS 2017</p>
+</footer>
+
+<!-- ═══════════════════════════════════════════ SCRIPTS ═══════════════════════════════════════════ -->
+<script>
+/* ── PROGRESS BAR ── */
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = h.scrollTop / (h.scrollHeight - h.clientHeight) * 100;
+  document.getElementById('progress-bar').style.width = pct.toFixed(1) + '%';
+});
+
+/* ═══════════════ WIDGET 1: SELF-ATTENTION ═══════════════ */
+(function() {
+  const TOKENS = ["The","cat","sat","on","the","mat"];
+  const N = TOKENS.length;
+  const ATTN = [
+    [0.40,0.20,0.15,0.10,0.10,0.05],
+    [0.15,0.45,0.20,0.08,0.07,0.05],
+    [0.10,0.30,0.35,0.10,0.08,0.07],
+    [0.10,0.15,0.20,0.35,0.12,0.08],
+    [0.35,0.10,0.08,0.08,0.32,0.07],
+    [0.28,0.12,0.10,0.08,0.22,0.20],
+  ];
+  const W=680, PAD=44, TW=82, TH=38, TY=80;
+  const xs = TOKENS.map((_,i)=> PAD + i*((W-PAD*2-TW)/(N-1)));
+  let sel=2;
+
+  const svg = document.getElementById('attn-svg');
+  const gT = document.getElementById('a-tokens');
+  const gL = document.getElementById('a-lines');
+  const gS = document.getElementById('a-scores');
+  const info = document.getElementById('a-info');
+
+  function ns(tag){ return document.createElementNS('http://www.w3.org/2000/svg',tag); }
+
+  function render(){
+    gT.innerHTML=''; gL.innerHTML=''; gS.innerHTML='';
+    TOKENS.forEach((t,i)=>{
+      const x=xs[i], isSel=i===sel, w=ATTN[sel][i], alpha=0.2+w*0.8;
+      const g=ns('g'); g.style.cursor='pointer';
+      const r=ns('rect');
+      r.setAttribute('x',x); r.setAttribute('y',TY);
+      r.setAttribute('width',TW); r.setAttribute('height',TH); r.setAttribute('rx','7');
+      r.setAttribute('fill', isSel?'#002991': w>0.2?'#008CFF':'#F4F4F4');
+      r.setAttribute('stroke', isSel?'#002991': w>0.2?'#008CFF':'#DDD');
+      r.setAttribute('stroke-width', isSel?'2':'0.8');
+      r.setAttribute('opacity', isSel?'1':alpha.toFixed(2));
+      const tx=ns('text');
+      tx.setAttribute('x',x+TW/2); tx.setAttribute('y',TY+TH/2);
+      tx.setAttribute('text-anchor','middle'); tx.setAttribute('dominant-baseline','central');
+      tx.setAttribute('font-family','JetBrains Mono,monospace'); tx.setAttribute('font-size','12');
+      tx.setAttribute('font-weight','500');
+      tx.setAttribute('fill', isSel?'#fff': w>0.2?'#fff':'#111');
+      tx.textContent=t;
+      g.appendChild(r); g.appendChild(tx);
+      g.addEventListener('click',()=>{sel=i;render();});
+      gT.appendChild(g);
+    });
+
+    TOKENS.forEach((_,i)=>{
+      if(i===sel) return;
+      const w=ATTN[sel][i];
+      const x1=xs[sel]+TW/2, x2=xs[i]+TW/2, y1=TY, y2=TY+TH;
+      const thick=0.8+w*9, alpha=0.12+w*0.88;
+      const cy=TY-30;
+      const p=ns('path');
+      p.setAttribute('d',`M${x1} ${y1} C${x1} ${cy},${x2} ${cy},${x2} ${y2}`);
+      p.setAttribute('fill','none'); p.setAttribute('stroke','#008CFF');
+      p.setAttribute('stroke-width',thick.toFixed(1)); p.setAttribute('opacity',alpha.toFixed(2));
+      gL.appendChild(p);
+    });
+
+    const bW=82, bH=20, bGap=4;
+    const totW=N*(bW+bGap)-bGap;
+    const startX=(W-totW)/2;
+    TOKENS.forEach((t,i)=>{
+      const w=ATTN[sel][i], bx=startX+i*(bW+bGap);
+      const bg=ns('rect'); bg.setAttribute('x',bx); bg.setAttribute('y',24);
+      bg.setAttribute('width',bW); bg.setAttribute('height',bH); bg.setAttribute('rx','3');
+      bg.setAttribute('fill','#ECECEC'); gS.appendChild(bg);
+      const fill=ns('rect'); fill.setAttribute('x',bx); fill.setAttribute('y',24);
+      fill.setAttribute('width',Math.round(w*bW)); fill.setAttribute('height',bH); fill.setAttribute('rx','3');
+      fill.setAttribute('fill',i===sel?'#002991':'#008CFF'); gS.appendChild(fill);
+      const pct=ns('text'); pct.setAttribute('x',bx+bW/2); pct.setAttribute('y',34);
+      pct.setAttribute('text-anchor','middle'); pct.setAttribute('dominant-baseline','central');
+      pct.setAttribute('font-family','JetBrains Mono,monospace'); pct.setAttribute('font-size','10');
+      pct.setAttribute('fill',w>0.28?'#fff':'#333'); pct.textContent=Math.round(w*100)+'%';
+      gS.appendChild(pct);
+      const lbl=ns('text'); lbl.setAttribute('x',bx+bW/2); lbl.setAttribute('y',14);
+      lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('font-family','JetBrains Mono,monospace');
+      lbl.setAttribute('font-size','10'); lbl.setAttribute('fill','#777'); lbl.textContent=t;
+      gS.appendChild(lbl);
+    });
+    const maxIdx=ATTN[sel].indexOf(Math.max(...ATTN[sel]));
+    info.textContent=`"${TOKENS[sel]}" attends most to "${TOKENS[maxIdx]}"  ·  line thickness = attention weight`;
+  }
+  render();
+})();
+
+/* ═══════════════ WIDGET 2: MULTI-HEAD ═══════════════ */
+(function(){
+  const SENT=["The","quick","brown","fox","jumps","over"];
+  const MN=SENT.length;
+  const HEADS=[
+    {label:"Head 1 — syntax", desc:"Tracks grammatical structure. Determiners bind tightly to nouns. Verbs connect to their subjects. The model learns syntactic roles purely from data.",
+      attn:[[0.50,0.10,0.05,0.25,0.05,0.05],[0.05,0.45,0.15,0.25,0.05,0.05],[0.05,0.10,0.50,0.25,0.05,0.05],[0.30,0.05,0.05,0.50,0.05,0.05],[0.05,0.05,0.05,0.40,0.35,0.10],[0.05,0.05,0.05,0.15,0.30,0.40]]},
+    {label:"Head 2 — adjacent", desc:"Focuses on neighbouring tokens. Each word pays close attention to the word immediately before and after — useful for capturing local phrasing and n-gram patterns.",
+      attn:[[0.50,0.40,0.05,0.02,0.02,0.01],[0.35,0.30,0.25,0.05,0.03,0.02],[0.05,0.30,0.35,0.25,0.03,0.02],[0.02,0.05,0.30,0.35,0.25,0.03],[0.01,0.02,0.05,0.30,0.40,0.22],[0.01,0.02,0.02,0.05,0.35,0.55]]},
+    {label:"Head 3 — global", desc:"Attends broadly and uniformly. Builds sentence-level representations by pulling signal from all positions simultaneously — a kind of sentence summary head.",
+      attn:[[0.25,0.18,0.18,0.18,0.12,0.09],[0.15,0.22,0.18,0.18,0.15,0.12],[0.15,0.15,0.25,0.18,0.15,0.12],[0.12,0.15,0.18,0.28,0.15,0.12],[0.12,0.12,0.15,0.20,0.28,0.13],[0.10,0.10,0.15,0.18,0.22,0.25]]},
+    {label:"Head 4 — semantic", desc:"Links semantically related words across distance. \"quick\", \"brown\", and \"fox\" activate each other — adjective-noun binding across positions.",
+      attn:[[0.20,0.15,0.15,0.35,0.08,0.07],[0.10,0.35,0.30,0.15,0.05,0.05],[0.08,0.30,0.38,0.15,0.05,0.04],[0.25,0.15,0.15,0.35,0.06,0.04],[0.08,0.05,0.05,0.12,0.45,0.25],[0.06,0.05,0.05,0.08,0.28,0.48]]},
+  ];
+  let selH=0;
+  const btnRow=document.getElementById('hd-btns');
+  const hdSvg=document.getElementById('hd-svg');
+  const hdDesc=document.getElementById('hd-desc');
+  function ns(t){ return document.createElementNS('http://www.w3.org/2000/svg',t); }
+
+  HEADS.forEach((h,hi)=>{
+    const b=document.createElement('button');
+    b.className='head-btn'+(hi===0?' active':'');
+    b.textContent=h.label;
+    b.onclick=()=>{selH=hi;document.querySelectorAll('.head-btn').forEach((el,i)=>el.classList.toggle('active',i===hi));renderH();};
+    btnRow.appendChild(b);
+  });
+
+  function renderH(){
+    hdSvg.innerHTML='';
+    const h=HEADS[selH]; hdDesc.textContent=h.desc;
+    const CELL=34, GT=44, GL=(680-MN*CELL)/2;
+    SENT.forEach((_,i)=>{
+      SENT.forEach((_,j)=>{
+        const w=h.attn[i][j];
+        const cx=GL+j*CELL+CELL/2, cy=GT+i*CELL+CELL/2;
+        const r=ns('rect'); r.setAttribute('x',GL+j*CELL+1); r.setAttribute('y',GT+i*CELL+1);
+        r.setAttribute('width',CELL-2); r.setAttribute('height',CELL-2); r.setAttribute('rx','3');
+        r.setAttribute('fill', w>0.35?'#002991': w>0.22?'#008CFF': w>0.11?'#60CDFF':'#F2F2F2');
+        hdSvg.appendChild(r);
+        if(w>0.11){
+          const t=ns('text'); t.setAttribute('x',cx); t.setAttribute('y',cy);
+          t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
+          t.setAttribute('font-family','JetBrains Mono,monospace'); t.setAttribute('font-size','10');
+          t.setAttribute('fill',w>0.2?'#fff':'#002991'); t.textContent=Math.round(w*100);
+          hdSvg.appendChild(t);
+        }
+      });
+      const rL=ns('text'); rL.setAttribute('x',GL-8); rL.setAttribute('y',GT+i*CELL+CELL/2);
+      rL.setAttribute('text-anchor','end'); rL.setAttribute('dominant-baseline','central');
+      rL.setAttribute('font-family','JetBrains Mono,monospace'); rL.setAttribute('font-size','11'); rL.setAttribute('fill','#555');
+      rL.textContent=SENT[i]; hdSvg.appendChild(rL);
+      const cL=ns('text'); cL.setAttribute('x',GL+i*CELL+CELL/2); cL.setAttribute('y',GT+MN*CELL+16);
+      cL.setAttribute('text-anchor','middle'); cL.setAttribute('font-family','JetBrains Mono,monospace');
+      cL.setAttribute('font-size','11'); cL.setAttribute('fill','#555'); cL.textContent=SENT[i];
+      hdSvg.appendChild(cL);
+    });
+    const hdrl=ns('text'); hdrl.setAttribute('x',GL-8); hdrl.setAttribute('y',GT-10);
+    hdrl.setAttribute('text-anchor','end'); hdrl.setAttribute('font-family','JetBrains Mono,monospace');
+    hdrl.setAttribute('font-size','10'); hdrl.setAttribute('fill','#bbb'); hdrl.textContent='query →';
+    hdSvg.appendChild(hdrl);
+    const hdcl=ns('text'); hdcl.setAttribute('x',GL+MN*CELL/2); hdcl.setAttribute('y',GT-10);
+    hdcl.setAttribute('text-anchor','middle'); hdcl.setAttribute('font-family','JetBrains Mono,monospace');
+    hdcl.setAttribute('font-size','10'); hdcl.setAttribute('fill','#bbb'); hdcl.textContent='← key attended to';
+    hdSvg.appendChild(hdcl);
+    const lg=[['low','#F2F2F2','#555'],['med','#60CDFF','#002991'],['high','#008CFF','#fff'],['peak','#002991','#fff']];
+    lg.forEach(([l,f,tc],li)=>{
+      const lx=GL+MN*CELL+18+li*58;
+      const r2=ns('rect'); r2.setAttribute('x',lx); r2.setAttribute('y',GT+10);
+      r2.setAttribute('width',22); r2.setAttribute('height',14); r2.setAttribute('rx','2');
+      r2.setAttribute('fill',f); r2.setAttribute('stroke','#DDD'); r2.setAttribute('stroke-width','0.5');
+      hdSvg.appendChild(r2);
+      const t2=ns('text'); t2.setAttribute('x',lx+11); t2.setAttribute('y',GT+34);
+      t2.setAttribute('text-anchor','middle'); t2.setAttribute('font-family','JetBrains Mono,monospace');
+      t2.setAttribute('font-size','9'); t2.setAttribute('fill','#888'); t2.textContent=l;
+      hdSvg.appendChild(t2);
+    });
+  }
+  renderH();
+})();
+
+/* ═══════════════ WIDGET 3: STEPPER ═══════════════ */
+(function(){
+  const STEPS=[
+    {title:"1 — Token embedding",body:"The word \"cat\" is looked up in the embedding table and converted into a dense vector (e.g. 512 numbers). Similar words like \"kitten\" produce nearby vectors. At this stage there is no context — just the word's identity.",
+      nodes:[{x:40,y:90,w:110,h:40,fill:'#F4F4F4',stroke:'#CCC',txt:'"cat"',tf:'#000'},{x:210,y:90,w:160,h:40,fill:'#002991',stroke:'#002991',txt:'Embedding lookup',tf:'#fff'},{x:448,y:90,w:180,h:40,fill:'#60CDFF',stroke:'#60CDFF',txt:'[0.3, −0.7, 1.2 … ]',tf:'#002991'}],
+      arrows:[[{x:150,y:110},{x:210,y:110}],[{x:370,y:110},{x:448,y:110}]],hi:2},
+    {title:"2 — Positional encoding",body:"A sinusoidal position signal is added to the embedding. Now the vector encodes both meaning and position — \"cat\" at index 2 looks different from \"cat\" at index 7. This is how the model knows word order despite parallel processing.",
+      nodes:[{x:40,y:70,w:130,h:40,fill:'#60CDFF',stroke:'#60CDFF',txt:'Token embed',tf:'#002991'},{x:40,y:130,w:130,h:40,fill:'#F4F4F4',stroke:'#DDD',txt:'Position signal',tf:'#555'},{x:230,y:82,w:30,h:106,fill:'#008CFF',stroke:'#008CFF',txt:'+',tf:'#fff'},{x:330,y:90,w:170,h:40,fill:'#002991',stroke:'#002991',txt:'Positioned vector',tf:'#fff'}],
+      arrows:[[{x:170,y:90},{x:230,y:108}],[{x:170,y:150},{x:230,y:148}],[{x:260,y:135},{x:330,y:110}]],hi:3},
+    {title:"3 — Self-attention",body:"\"cat\" generates Q, K, V projections and attends to all other tokens. The result blends context from the full sentence — \"cat\" now knows it's preceded by \"The\" and followed by the verb \"sat.\"",
+      nodes:[{x:30,y:90,w:100,h:40,fill:'#F4F4F4',stroke:'#CCC',txt:'Input vecs',tf:'#555'},{x:195,y:90,w:240,h:40,fill:'#002991',stroke:'#002991',txt:'Multi-head self-attention',tf:'#fff'},{x:510,y:90,w:140,h:40,fill:'#60CDFF',stroke:'#60CDFF',txt:'Context-rich vec',tf:'#002991'}],
+      arrows:[[{x:130,y:110},{x:195,y:110}],[{x:435,y:110},{x:510,y:110}]],hi:2,note:"Q·Kᵀ / √dₖ → softmax → weighted sum of V"},
+    {title:"4 — Add & LayerNorm",body:"The original input is added back (residual connection), then normalised. Residuals let gradients flow cleanly through 6+ stacked layers. LayerNorm keeps activations well-scaled, preventing training instability.",
+      nodes:[{x:30,y:90,w:110,h:40,fill:'#F4F4F4',stroke:'#CCC',txt:'Input (skip)',tf:'#555'},{x:200,y:90,w:100,h:40,fill:'#008CFF',stroke:'#008CFF',txt:'+ (Add)',tf:'#fff'},{x:360,y:90,w:120,h:40,fill:'#008CFF',stroke:'#008CFF',txt:'LayerNorm',tf:'#fff'},{x:552,y:90,w:96,h:40,fill:'#60CDFF',stroke:'#60CDFF',txt:'Output',tf:'#002991'}],
+      arrows:[[{x:140,y:110},{x:200,y:110}],[{x:300,y:110},{x:360,y:110}],[{x:480,y:110},{x:552,y:110}]],hi:3},
+    {title:"5 — Feed-forward network",body:"Each token's vector passes independently through Linear → ReLU → Linear. This adds per-token reasoning capacity on top of attention. The hidden layer is 4× wider than the model dimension. Same weights, every position.",
+      nodes:[{x:30,y:90,w:96,h:40,fill:'#F4F4F4',stroke:'#CCC',txt:'Input vec',tf:'#555'},{x:188,y:90,w:130,h:40,fill:'#000',stroke:'#000',txt:'Linear → ReLU',tf:'#fff'},{x:378,y:90,w:130,h:40,fill:'#000',stroke:'#000',txt:'Linear (d_model)',tf:'#fff'},{x:566,y:90,w:84,h:40,fill:'#60CDFF',stroke:'#60CDFF',txt:'Richer vec',tf:'#002991'}],
+      arrows:[[{x:126,y:110},{x:188,y:110}],[{x:318,y:110},{x:378,y:110}],[{x:508,y:110},{x:566,y:110}]],hi:3},
+    {title:"6 — Output after N layers",body:"After 6 (or more) identical layers, \"cat\" has become a rich contextual vector — encoding not just what \"cat\" means in isolation, but its exact grammatical role and semantic context in this sentence. This is what classifiers or the decoder reads.",
+      nodes:[{x:30,y:90,w:140,h:40,fill:'#F4F4F4',stroke:'#CCC',txt:'Raw "cat" token',tf:'#555'},{x:248,y:90,w:100,h:40,fill:'#002991',stroke:'#002991',txt:'× 6 layers',tf:'#fff'},{x:420,y:90,w:200,h:40,fill:'#002991',stroke:'#002991',txt:'Contextual output',tf:'#fff'}],
+      arrows:[[{x:170,y:110},{x:248,y:110}],[{x:348,y:110},{x:420,y:110}]],hi:2},
+  ];
+
+  let step=0;
+  const dotRow=document.getElementById('sp-dots');
+  const spSvg=document.getElementById('sp-svg');
+  const spTitle=document.getElementById('sp-title');
+  const spBody=document.getElementById('sp-body');
+  const spCount=document.getElementById('sp-count');
+  const spPrev=document.getElementById('sp-prev');
+  const spNext=document.getElementById('sp-next');
+  function ns(t){ return document.createElementNS('http://www.w3.org/2000/svg',t); }
+
+  function buildDots(){
+    dotRow.innerHTML='';
+    STEPS.forEach((_,i)=>{
+      const d=document.createElement('div');
+      d.style.cssText=`width:9px;height:9px;border-radius:50%;background:${i===step?'#002991':'#DDD'};border:1.5px solid ${i===step?'#002991':'#CCC'};cursor:pointer;transition:all .2s;`;
+      d.onclick=()=>{step=i;render();};
+      dotRow.appendChild(d);
+    });
+    const l=document.createElement('span');
+    l.style.cssText='font-size:11px;color:#aaa;margin-left:8px;font-family:JetBrains Mono,monospace;';
+    l.textContent=`step ${step+1} of ${STEPS.length}`;
+    dotRow.appendChild(l);
+  }
+
+  function render(){
+    buildDots();
+    const s=STEPS[step];
+    spTitle.textContent=s.title;
+    spBody.textContent=s.body;
+    spCount.textContent=`${step+1} / ${STEPS.length}`;
+    spPrev.disabled=step===0;
+    spNext.disabled=step===STEPS.length-1;
+    spSvg.innerHTML=`<defs><marker id="sp-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#002991" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>`;
+
+    s.nodes.forEach((n,ni)=>{
+      const g=ns('g');
+      const r=ns('rect'); r.setAttribute('x',n.x); r.setAttribute('y',n.y);
+      r.setAttribute('width',n.w); r.setAttribute('height',n.h); r.setAttribute('rx','7');
+      r.setAttribute('fill',n.fill); r.setAttribute('stroke',n.stroke);
+      r.setAttribute('stroke-width',ni===s.hi?'2':'0.8');
+      g.appendChild(r);
+      const t=ns('text'); t.setAttribute('x',n.x+n.w/2); t.setAttribute('y',n.y+n.h/2);
+      t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
+      t.setAttribute('font-family','JetBrains Mono,monospace'); t.setAttribute('font-size','12');
+      t.setAttribute('font-weight','500'); t.setAttribute('fill',n.tf);
+      t.textContent=n.txt; g.appendChild(t);
+      spSvg.appendChild(g);
+    });
+
+    (s.arrows||[]).forEach(pts=>{
+      const p=ns('path');
+      const d=pts.map((pt,i)=>(i===0?'M':'L')+pt.x+' '+pt.y).join(' ');
+      p.setAttribute('d',d); p.setAttribute('fill','none');
+      p.setAttribute('stroke','#002991'); p.setAttribute('stroke-width','1.2');
+      p.setAttribute('opacity','0.5'); p.setAttribute('marker-end','url(#sp-ah)');
+      spSvg.appendChild(p);
+    });
+
+    if(s.note){
+      const t=ns('text'); t.setAttribute('x',340); t.setAttribute('y',168);
+      t.setAttribute('text-anchor','middle'); t.setAttribute('font-family','JetBrains Mono,monospace');
+      t.setAttribute('font-size','11'); t.setAttribute('fill','#008CFF'); t.setAttribute('font-style','italic');
+      t.textContent=s.note; spSvg.appendChild(t);
+    }
+  }
+
+  render();
+
+  window.spMove=function(d){step=Math.max(0,Math.min(STEPS.length-1,step+d));render();};
+})();
+</script>
+</body>
+</html>
