@@ -19,7 +19,7 @@ Welcome! This is a curated collection of articles, tutorials, and insights about
 
 <div class="article-grid">
 
-#### [Understanding Large Language Models: A Comprehensive Guide](./articles/transformer_article.html)
+#### [Understanding Large Language Models: A Comprehensive Guide](./articles/index.html)
 *Published: January 2025*
 
 Dive deep into how LLMs work, from tokenization to transformer architecture. Learn about attention mechanisms, training processes, and practical applications.
