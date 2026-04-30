@@ -1,0 +1,19 @@
+# GitHub Pages Configuration
+title: "Transformers Demystified"
+description: "A visual deep dive into self-attention, multi-head attention, encoders and decoders"
+author: "Your Name"
+
+# Tell GitHub Pages NOT to use Jekyll processing on index.html
+# (we're serving raw HTML)
+plugins: []
+
+# Exclude files from processing
+exclude:
+  - README.md
+  - "*.sh"
+
+# Base URL - leave empty for user/org pages, set to /repo-name for project pages
+# Example: if your URL is username.github.io/transformer-article
+# set baseurl: "/transformer-article"
+# If your URL is username.github.io (user page), leave empty:
+baseurl: ""
